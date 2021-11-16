@@ -12,7 +12,7 @@ env:
   AZCLIVERSION: latest #2.30.0 #Pinning to a specific AZ CLI version
 
 jobs:
-  diags:
+  Deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
