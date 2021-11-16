@@ -39,6 +39,10 @@ resource functionApp 'Microsoft.Web/sites@2020-06-01' = {
           'value': 'dotnet'
         }
         {
+          name: 'COSMOS_CONNECTION_STRING'
+          value: cosmos.outputs.connstr
+        }
+        {
           name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(storageAccount.id, storageAccount.apiVersion).keys[0].value}'
         }
@@ -119,7 +123,7 @@ resource AppInsights 'Microsoft.Insights/components@2020-02-02' = {
 // }
 
 //Using the latest api versions to deploy Cosmos actually stops the app code from working. So at least for the time being, it's going to just use the old API versions to create the MongoDb in CosmosDb.
-module costos 'cosmos2021.bicep' = { 
+module cosmos 'cosmos2021.bicep' = { 
   name: 'cosmosDb'
   params: {
     databaseAccountId: databaseAccountId
