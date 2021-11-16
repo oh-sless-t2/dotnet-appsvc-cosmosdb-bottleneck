@@ -58,7 +58,9 @@ jobs:
       id: azfnprofile
       run:  |
         $profile = ""
-        $profile = Get-AzWebAppPublishingProfile -ResourceGroupName $env:AZURE_RESOURCE_GROUP_NAME -Name $env:AZURE_FUNCTIONAPP_NAME
+        #$profile = Get-AzWebAppPublishingProfile -ResourceGroupName $env:AZURE_RESOURCE_GROUP_NAME -Name $env:AZURE_FUNCTIONAPP_NAME
+        $profile=az webapp deployment list-publishing-profiles --name $env:AzFnAppName --resource-group gobyers
+        write-output $profile
         $profile = $profile.Replace("`r", "").Replace("`n", "")
         Write-Output "::set-output name=pubprofile::$profile"
         Remove-Variable profile
