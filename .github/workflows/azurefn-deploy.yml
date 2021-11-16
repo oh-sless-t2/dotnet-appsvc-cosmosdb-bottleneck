@@ -53,13 +53,22 @@ jobs:
         environment: azurecloud
         allow-no-subscriptions: false
 
+    - name: Install Module
+      shell: pwsh
+      run:  |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Install-Module -Name Az.Websites
+
     - name: Get AzFun Publish Profile
       shell: pwsh
       id: azfnprofile
       run:  |
         $profile = ""
-        #$profile = Get-AzWebAppPublishingProfile -ResourceGroupName $env:AZURE_RESOURCE_GROUP_NAME -Name $env:AZURE_FUNCTIONAPP_NAME
+        
+        #This returns JSON, whereas we want XML for the next step - so let's use the powershell module instead!
         $profile=az webapp deployment list-publishing-profiles --name $env:AzFnAppName --resource-group gobyers
+        
+        $profile=Get-AzWebAppPublishingProfile -ResourceGroupName gobyers -Name $env:AzFnAppName
         write-output $profile
         $profile = $profile.Replace("`r", "").Replace("`n", "")
         Write-Output "::set-output name=pubprofile::$profile"
