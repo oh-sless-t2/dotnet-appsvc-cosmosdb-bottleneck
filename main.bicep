@@ -10,7 +10,7 @@ param hostingPlanName string = 'plan-${appName}'
 
 //Making the name unique - if this fails, it's because the name is already taken (and you're really unlucky!)
 var webAppName = 'app-${appName}-${uniqueString(resourceGroup().id, appName)}'
-var storageAccountName = 'stor-${appName}-${uniqueString(resourceGroup().id, appName)}'
+var storageAccountName = substring(toLower('stor${appName}${uniqueString(resourceGroup().id, appName)}'),0,23)
 
 resource functionApp 'Microsoft.Web/sites@2020-06-01' = {
   name: webAppName
@@ -105,7 +105,6 @@ resource AppInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
   properties: {
     Application_Type: 'web'
-    Request_Source: 'AzureTfsExtensionAzureProject'
   }
 }
 
