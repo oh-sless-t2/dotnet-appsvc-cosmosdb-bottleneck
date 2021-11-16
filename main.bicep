@@ -1,11 +1,11 @@
 @description('The name seed for your application. Check outputs for the actual name and url')
-param appName string = 'icecream'
+param appName string = toLower('icecream')
 
 @description('Name of the CosmosDb Account')
-param databaseAccountId string = 'db-${appName}'
+param databaseAccountId string = toLower('db-${appName}')
 
 @description('Name of the web app host plan')
-param hostingPlanName string = 'plan-${appName}'
+param hostingPlanName string = toLower('plan-${appName}')
 
 
 //Making the name unique - if this fails, it's because the name is already taken (and you're really unlucky!)
