@@ -8,6 +8,11 @@ on:
     branches: [ main ]
     paths: "**.cs"
     
+env:
+  AzFnAppName: app-ToffeeTiger-nj3jpycb6kws6
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '6.0.x' # set this to the dotnet version to use
+  
 jobs:
   build:
 
@@ -15,16 +20,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      
+    - name: 'Resolve Project Dependencies Using Dotnet'
+      shell: pwsh
+      run: |
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+        dotnet build --configuration Release --output ./output
+        popd
+      
+    #- name: Build
+    #  run: dotnet build --no-restore
+      
+    #- name: Test
+    #  run: dotnet test --no-build --verbosity normal
+      
 
     - name: Azure Login
       uses: Azure/login@v1
@@ -34,11 +51,22 @@ jobs:
         environment: azurecloud
         allow-no-subscriptions: false
 
-    - name: Deploy to AzFn
-      uses: Azure/cli@1.0.4
+    - name: Get AzFun Publish Profile
+      shell: pwsh
+      id: azfnprofile
+      run:  |
+        $profile = ""
+        $profile = Get-AzWebAppPublishingProfile -ResourceGroupName $env:AZURE_RESOURCE_GROUP_NAME -Name $env:AZURE_FUNCTIONAPP_NAME
+        $profile = $profile.Replace("`r", "").Replace("`n", "")
+        Write-Output "::set-output name=pubprofile::$profile"
+        Remove-Variable profile
+        
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
       with:
-        #azcliversion: ${{ env.AZCLIVERSION }}
-        inlineScript: |
-          echo "Deploy!"
-          
-    
+        app-name: '${{ env.AzFnAppName }}'
+        slot-name: 'Production'
+        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+        publish-profile: ${{ steps.azfnprofile.outputs.pubprofile }}
+  
