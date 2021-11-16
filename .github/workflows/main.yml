@@ -9,7 +9,7 @@ env:
   #ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "ToffeeTiger" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  #AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: latest #2.30.0 #Pinning to a specific AZ CLI version
 
 jobs:
   diags:
@@ -35,4 +35,27 @@ jobs:
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f main.bicep -g $RG -p appName=$RESNAME
           
+      - name: Deploy Infrastructure
+        id: deployInfra
+        uses: Azure/cli@1.0.4
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='Dep${{ github.run_number }}'
             
+            az deployment group create -f main.bicep -g $RG -p appName=$RESNAME --name $DEPNAME
+            
+            DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
+            echo $DEPSTATUS
+            
+            #outputs
+            APPURL=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.appUrl.value" -o tsv)
+            echo "APPURL returned from az deployment = $APPURL"
+            echo "::set-output name=APPURL::$APPURL"
+            
+            APPNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.appName.value" -o tsv)
+            echo "APPNAME returned from az deployment = $APPNAME"
+            echo "::set-output name=APPNAME::$APPNAME"
+             
